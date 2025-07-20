@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% from 'bootstrap5/pagination.html' import render_pager, render_pagination %}
+{% from 'bootstrap5/table.html' import render_table %}
+
+{% block content %}
+<div class="container">
+    <h2>{{ title if title else '管理'}}</h2>
+    <a href="{{ url_for('admin.permission_create') }}" class="btn btn-primary mb-3">新增</a>
+    {{ render_table(messages, show_actions=True, model=Permission, edit_url=('admin.permission_edit', [('id', ':id')]), delete_url=('admin.permission_delete', [('id', ':id')])) }}
+    {{ render_pagination(pagination) }}
+</div>
+{% endblock %}

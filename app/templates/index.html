@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="jumbotron">
+    <h1 class="display-4">Asset Management Platform</h1>
+    <p class="lead">Manage your assets efficiently and securely.</p>
+    <hr class="my-4">
+    <p>This platform allows you to track and manage your physical and digital assets.</p>
+    <p class="lead">
+        {% if current_user.is_authenticated %}
+        <a class="btn btn-primary btn-lg" href="{{ url_for('asset.list_assets') }}" role="button">Manage Assets</a>
+        {% else %}
+        <a class="btn btn-primary btn-lg" href="{{ url_for('auth.login') }}" role="button">Login to Get Started</a>
+        {% endif %}
+    </p>
+</div>
+{% endblock %}
