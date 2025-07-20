@@ -4,6 +4,7 @@
 
 这是一个基于 Flask 的资产管理系统，使用 Flask-SQLAlchemy 进行数据库操作，Flask-WTF 处理表单，以及 Flask-Login 和 Flask-Security-Too 进行用户认证和权限管理。该系统允许用户管理资产、角色和权限，提供了清晰的用户界面和简单的操作流程。
 
+ps: deepseek+手工调教出的，没基础的情况踩了好多坑。。。
 ## 特性
 
 - 用户认证与授权
