@@ -53,7 +53,7 @@ def create_asset():
 @login_required
 def edit_asset(id):
     asset = Asset.query.get_or_404(id)
-    if asset.crearted_by != current_user.id and not current_user.is_admin():
+    if asset.crearted_by != current_user.id and not current_user.is_superuser:
         flash("You do not have permission to edit this asset", "danger")
         return redirect(url_for("asset.list_assets"))
 

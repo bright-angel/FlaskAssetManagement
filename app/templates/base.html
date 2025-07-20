@@ -35,16 +35,22 @@
                 {{ render_nav_item('asset.list_assets', '我的资产') }}
                 {% endif %}
             </ul>
-            <ul class="navbar-nav mr-auto">
-                {% if current_user.is_authenticated and current_user.has_role("sysadmin") %}
-                    {{ render_nav_item('admin.user_list', '用户管理') }}
-                    {{ render_nav_item('admin.role_list', '角色管理') }}
-                    {{ render_nav_item('admin.permission_list', '权限管理') }}
-                {% endif %}
-            </ul>
-            <ul class="navbar-nav">
+            <ul class="navbar-nav ms-auto">
                 {% if current_user.is_authenticated %}
-                    {{ render_nav_item('auth.logout', '注销') }}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            {{current_user.username}}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            {% if current_user.is_superuser %}
+                                <li><a class="dropdown-item" href="{{ url_for('admin.user_list') }}">用户管理</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin.role_list') }}">角色管理</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin.permission_list') }}">权限管理</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                            {% endif %}
+                            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">注销</a></li>
+                        </ul>
+                    </li>
                 {% else %}
                     {{ render_nav_item('auth.login', '登录') }}
                 {% endif %}
@@ -68,5 +74,3 @@
     {{ bootstrap.load_js() }}
 </body>
 </html>
-
-
