@@ -27,8 +27,8 @@ class LoginForm(FlaskForm):
     remember = BooleanField("记住我")
     submit = SubmitField("提交")
 
-class UserForm1(FlaskForm):
-    username = StringField("用户名", validators=[DataRequired(), Length(3, 20)])
+class PasswordChangeForm(FlaskForm):
+    old_password = PasswordField("旧密码", validators=[])
     password = PasswordField("密码", validators=[])
     confirm_password = PasswordField(
         "确认密码", validators=[EqualTo("password", "两次密码不一致")]

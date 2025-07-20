@@ -42,6 +42,7 @@
                             {{current_user.username}}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('auth.password_change') }}">修改密码</a></li>
                             {% if current_user.is_superuser %}
                                 <li><a class="dropdown-item" href="{{ url_for('admin.user_list') }}">用户管理</a></li>
                                 <li><a class="dropdown-item" href="{{ url_for('admin.role_list') }}">角色管理</a></li>
