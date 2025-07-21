@@ -37,7 +37,7 @@ def user_list():
     for i in range(len(messages)):
         messages[i].password = messages[i].password[:10] + "..."
     return render_template(
-        "admin/user_list.html",
+        "admin/user/list.html",
         pagination=pagination,
         messages=messages,
         User=User,
@@ -61,7 +61,7 @@ def user_create():
         db.session.commit()
         flash("用户创建成功", "success")
         return redirect(url_for("admin.user_list"))
-    return render_template("admin/user_edit.html", form=form, title="创建用户")
+    return render_template("form.html", form=form, title="创建用户")
 
 
 @bp.route("/user/edit/<int:id>", methods=["GET", "POST"])
@@ -82,7 +82,7 @@ def user_edit(id):
         return redirect(url_for("admin.user_list"))
     form.roles.data = [role.id for role in user.roles]
     return render_template(
-        "admin/user_edit.html", form=form, user=user, title="编辑用户"
+        "form.html", form=form, user=user, title="编辑用户"
     )
 
 
@@ -109,7 +109,7 @@ def role_list():
     pagination = Role.query.paginate(page=page, per_page=10)
     messages = pagination.items
     return render_template(
-        "admin/role_list.html",
+        "admin/role/list.html",
         pagination=pagination,
         messages=messages,
         Role=Role,
@@ -132,7 +132,7 @@ def role_create():
         db.session.commit()
         flash("角色创建成功", "success")
         return redirect(url_for("admin.role_list"))
-    return render_template("admin/role_edit.html", form=form, title="创建角色")
+    return render_template("form.html", form=form, title="创建角色")
 
 
 @bp.route("/role/edit/<int:id>", methods=["GET", "POST"])
@@ -152,7 +152,7 @@ def role_edit(id):
         return redirect(url_for("admin.role_list"))
     form.permissions.data = [perm.id for perm in role.permissions]
     return render_template(
-        "admin/role_edit.html", form=form, role=role, title="编辑角色"
+        "form.html", form=form, role=role, title="编辑角色"
     )
 
 
@@ -181,7 +181,7 @@ def permission_list():
     pagination = Permission.query.paginate(page=page, per_page=10)
     messages = pagination.items
     return render_template(
-        "admin/permission_list.html",
+        "admin/permission/list.html",
         pagination=pagination,
         messages=messages,
         Permission=Permission,
@@ -209,7 +209,7 @@ def permission_create():
         db.session.commit()
         flash("权限创建成功", "success")
         return redirect(url_for("admin.permission_list"))
-    return render_template("admin/permission_edit.html", form=form, title="创建权限")
+    return render_template("form.html", form=form, title="创建权限")
 
 
 @bp.route("/permission/edit/<int:id>", methods=["GET", "POST"])
@@ -234,7 +234,7 @@ def permission_edit(id):
         flash("权限更新成功", "success")
         return redirect(url_for("admin.permission_list"))
     return render_template(
-        "admin/permission_edit.html", form=form, permission=permission, title="编辑权限"
+        "form.html", form=form, permission=permission, title="编辑权限"
     )
 
 

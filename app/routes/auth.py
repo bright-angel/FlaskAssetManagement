@@ -28,9 +28,9 @@ def login():
         flash("用户名或密码错误", "danger")
     return render_template("auth/login.html", form=form)
 
-@bp.route("/password_change", methods=["GET", "POST"])
+@bp.route("/edit_password", methods=["GET", "POST"])
 @login_required
-def password_change():
+def edit_password():
     user = User.query.get_or_404(current_user.id)
     form = PasswordChangeForm(obj=user)
     if form.validate_on_submit():
@@ -41,7 +41,7 @@ def password_change():
             return redirect(url_for("main.index"))
         flash("旧密码错误", "danger")
         return redirect(url_for("main.index"))
-    return render_template("auth/password_change.html", form=form, user=user, title="修改密码")
+    return render_template("auth/edit_password.html", form=form, user=user, title="修改密码")
 
 
 @bp.route("/logout")
