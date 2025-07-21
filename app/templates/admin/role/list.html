@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% from 'bootstrap5/pagination.html' import render_pager, render_pagination %}
-{% from 'bootstrap5/table.html' import render_table %}
 
 {% block content %}
 <div class="container">
-    <h2>{{ title if title else '管理'}}</h2>
+    {% if title %}
+        <h2>{{ title}}</h2>
+    {% endif %}
     <a href="{{ url_for('admin.role_create') }}" class="btn btn-primary mb-3">新增</a>
     {{ render_table(messages, show_actions=True, model=Role, edit_url=('admin.role_edit', [('id', ':id')]), delete_url=('admin.role_delete', [('id', ':id')])) }}
     {{ render_pagination(pagination) }}

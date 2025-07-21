@@ -46,7 +46,7 @@ def create_asset():
         db.session.commit()
         flash("Asset created successfully!", "success")
         return redirect(url_for("asset.list_assets"))
-    return render_template("asset/edit.html", form=form)
+    return render_template("form.html", form=form)
 
 
 @bp.route("/edit/<int:id>", methods=["GET", "POST"])
@@ -63,7 +63,7 @@ def edit_asset(id):
         db.session.commit()
         flash("Asset updated successfully!", "success")
         return redirect(url_for("asset.list_assets"))
-    return render_template("asset/edit.html", form=form, asset=asset)
+    return render_template("form.html", form=form, asset=asset)
 
 
 @bp.route("/delete/<int:id>", methods=["POST"])

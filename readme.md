@@ -22,6 +22,7 @@ ps: deepseek+手工调教出的，没基础的情况踩了好多坑。。。
 - Flask-WTF 1.2.1
 - Flask-Login 0.6.3
 - Bootstrap-Flask 2.5.0
+- flask_migrate 4.1.0
 - python-dotenv 1.0.0
 
 ## 安装与配置
@@ -60,7 +61,15 @@ SECURITY_PASSWORD_SALT=your_password_salt_here
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=adminpassword
 ```
+### 5. 数据库迁移
 
+运行以下命令以初始化数据库：
+
+```bash
+flask db init    # 初始化迁移文件夹
+flask db migrate # 创建迁移脚本
+flask db upgrade # 应用数据库迁移
+```
 ## 使用
 
 ### 启动项目

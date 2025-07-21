@@ -17,7 +17,7 @@ from wtforms import (
     FloatField,
     SubmitField,
 )
-from wtforms.validators import DataRequired, Length, EqualTo
+from wtforms.validators import DataRequired, Length, EqualTo, Optional
 from .models import User, Role, Permission
 
 
@@ -34,6 +34,23 @@ class PasswordChangeForm(FlaskForm):
         "确认密码", validators=[EqualTo("password", "两次密码不一致")]
     )
     submit = SubmitField("提交")
+
+class UserSearchForm(FlaskForm):
+    username = StringField("用户名",render_kw={"placeholder": "用户名"} )
+    per_page = SelectField("每页数量", 
+                          choices=[(10, '10'), (20, '20'), (50, '50'), (100, '100')], 
+                          coerce=int, 
+                          default=10)
+    search = SubmitField('搜索')
+    reset = SubmitField('重置')
+class PermissionSearchForm(FlaskForm):
+    api = StringField("API端点",render_kw={"placeholder": "API端点"} )
+    per_page = SelectField("每页数量", 
+                          choices=[(10, '10'), (20, '20'), (50, '50'), (100, '100')], 
+                          coerce=int, 
+                          default=10)
+    search = SubmitField('搜索')
+    reset = SubmitField('重置')
 
 class UserForm(FlaskForm):
     username = StringField("用户名", validators=[DataRequired(), Length(3, 20)])

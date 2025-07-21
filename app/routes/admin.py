@@ -17,8 +17,8 @@ from flask import (
     current_app,
 )
 from flask_login import login_required, current_user
-from ..extensions import db
-from ..forms import UserForm, RoleForm, PermissionForm
+from ..extensions import db,csrf
+from ..forms import UserForm, RoleForm, PermissionForm, UserSearchForm, PermissionSearchForm
 from ..models import User, Role, Permission
 from ..utils import role_required, permission_required
 from copy import deepcopy
@@ -27,21 +27,43 @@ bp = Blueprint("admin", __name__, url_prefix="/admin")
 
 
 # 用户管理视图
+@csrf.exempt
 @bp.route("/users")
 @login_required
 @permission_required('admin.user_list')
 def user_list():
+    form = UserSearchForm(request.args)
+    
+    # 处理重置操作
+    if 'reset' in request.args:
+        return redirect(url_for('admin.user_list'))
+    
+    # 初始化查询
+    query = User.query
+    
+    # 处理搜索条件
+    if 'search' in request.args and form.validate():
+        username = form.username.data.strip()
+        query = query.filter(User.username.ilike(f"%{username}%"))
+    
+    # 处理分页参数
     page = request.args.get("page", 1, type=int)
-    pagination = User.query.paginate(page=page, per_page=10)
-    messages = deepcopy(pagination.items)
-    for i in range(len(messages)):
-        messages[i].password = messages[i].password[:10] + "..."
+    per_page = min(request.args.get("per_page", 10, type=int), 100)  # 限制最大值
+    
+    # 执行分页查询
+    pagination = query.paginate(page=page, per_page=per_page)
+    
+    # 密码掩码处理
+    for user in pagination.items:
+        user.password = user.password[:10] + "..." if user.password else ""
+    
     return render_template(
         "admin/user/list.html",
         pagination=pagination,
-        messages=messages,
+        messages=pagination.items,  # 直接使用分页对象的items
         User=User,
         title="用户列表",
+        form=form,
     )
 
 
@@ -177,8 +199,27 @@ def role_delete(id):
 @login_required
 @permission_required('admin.permission_list')
 def permission_list():
+
+    form = PermissionSearchForm(request.args)  # 从 GET 参数初始化表单
+    
+    # 处理重置操作
+    if 'reset' in request.args:
+        return redirect(url_for('admin.permission_list'))  # 重定向到无参URL
+    
+    # 初始化查询
+    query = Permission.query
+    
+    # 处理搜索验证
+    if 'search' in request.args and form.validate():
+        search_api = form.api.data.strip()
+        if search_api:
+            query = query.filter(Permission.endpoint.ilike(f"%{search_api}%"))
+
     page = request.args.get("page", 1, type=int)
-    pagination = Permission.query.paginate(page=page, per_page=10)
+    per_page = request.args.get("per_page", 10, type=int)
+    if per_page > 100:
+        per_page = 100
+    pagination = query.paginate(page=page, per_page=per_page)
     messages = pagination.items
     return render_template(
         "admin/permission/list.html",
@@ -186,6 +227,7 @@ def permission_list():
         messages=messages,
         Permission=Permission,
         title="权限列表",
+        form=form,
     )
 
 
@@ -196,7 +238,7 @@ def permission_create():
     if form.validate_on_submit():
         # 检查是否已存在相同的endpoint和method
         existing = Permission.query.filter_by(
-            endpoint=form.endpoint.data, method=form.method.data
+            endpoint=form.endpoint.data
         ).first()
 
         if existing:
@@ -222,7 +264,6 @@ def permission_edit(id):
         # 检查是否与其他权限冲突
         existing = Permission.query.filter(
             Permission.endpoint == form.endpoint.data,
-            Permission.method == form.method.data,
             Permission.id != id,
         ).first()
 

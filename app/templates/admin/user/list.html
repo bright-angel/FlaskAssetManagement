@@ -1,11 +1,12 @@
 {% extends "base.html" %}
-{% from 'bootstrap5/pagination.html' import render_pager, render_pagination %}
-{% from 'bootstrap5/table.html' import render_table %}
 
 {% block content %}
 <div class="container">
-    <h2>{{ title if title else '管理'}}</h2>
+    {% if title %}
+        <h2>{{ title }}</h2>
+    {% endif %}
     <a href="{{ url_for('admin.user_create') }}" class="btn btn-primary mb-3">新增</a>
+    {{ render_form(form, form_type='inline',method='get',button_map={'search': 'primary', 'reset': 'secondary'},button_size='sm') }}
     {{ render_table(messages, show_actions=True, model=User, edit_url=('admin.user_edit', [('id', ':id')]), delete_url=('admin.user_delete', [('id', ':id')])) }}
     {{ render_pagination(pagination) }}
 </div>
