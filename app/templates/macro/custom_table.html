@@ -1,0 +1,219 @@
+{% from 'bootstrap5/utils.html' import arg_url_for, render_icon %}
+
+{% macro build_url(record, endpoint, url_tuples, model, pk_field) %}
+    {% if model != None %}
+        {% set record = model.query.get(record[pk_field]) %}
+    {% endif %}
+    {% with url_params = {} -%}
+        {%- do url_params.update(request.view_args if not endpoint else {}),
+            url_params.update(request.args if not endpoint else {}) -%}
+            {% for url_parameter, db_field in url_tuples %}
+                {% if db_field.startswith(':') and '.' in db_field %}
+                    {%- set db_field = db_field[1:].split('.') -%}
+                    {%- do url_params.update({url_parameter: record[db_field[0]][db_field[1]]}) -%}
+                {% elif db_field.startswith(':') %}
+                    {%- set db_field = db_field[1:] -%}
+                    {%- do url_params.update({url_parameter: record[db_field]}) -%}
+                {% else %}
+                    {%- do url_params.update({url_parameter: db_field}) -%}
+                {% endif %}
+            {% endfor %}
+        {{ arg_url_for(endpoint, url_params) }}
+    {%- endwith %}
+{%- endmacro %}
+
+{% macro build_bar_url(endpoint, url_tuples) %}
+    {% with url_params = {} -%}
+        {%- do url_params.update(request.view_args if not endpoint else {}),
+            url_params.update(request.args if not endpoint else {}) -%}
+            {% for url_parameter, db_field in url_tuples %}
+                {%- do url_params.update({url_parameter: db_field}) -%}
+            {% endfor %}
+        {{ arg_url_for(endpoint, url_params) }}
+    {%- endwith %}
+{%- endmacro %}
+
+{% macro render_custom_table(data,
+                      model=None,
+                      primary_key='id',
+                      custom_actions=None,
+                      custom_bars=None,
+                      custom_cols=None,
+                      table_classes=None,
+                      header_classes=None,
+                      body_classes=None,
+                      responsive=False,
+                      responsive_class='table-responsive') %}
+    
+    {# 处理选中的ID列表 #}
+    <script>
+        function toggleSelectAll(source) {
+            checkboxes = document.getElementsByName('selected_ids');
+            for(var i=0; i<checkboxes.length; i++) {
+                checkboxes[i].checked = source.checked;
+            }
+        }
+        
+        function getSelectedIds() {
+            var checkboxes = document.getElementsByName('selected_ids');
+            var selectedIds = [];
+            for(var i=0; i<checkboxes.length; i++) {
+                if(checkboxes[i].checked) {
+                    selectedIds.push(checkboxes[i].value);
+                }
+            }
+            return selectedIds;
+        }
+    </script>
+
+    {# 工具栏 #}
+    {% if custom_bars %}
+    <div class="d-flex justify-content-between mb-3">
+        <div>
+            {% for bar in custom_bars %}
+                {% set bar_name = bar[0] %}
+                {% set bar_icon = bar[1] %}
+                {% set bar_url = bar[2] %}
+                
+                {% if bar_url is string %}
+                    <a href="{{ bar_url }}" class="btn btn-sm btn-outline-secondary me-2">
+                        {{ render_icon(bar_icon) }} {{ bar_name }}
+                    </a>
+               {% else %}
+                    {% if bar_url[1] and bar_url[1][0][0] == "selected_ids" %}
+                        <form class="d-inline" action="{{ bar_url[0] }}" method="post">
+                            <input type="hidden" name="selected_ids" id="selected_ids_input" value="">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary me-2" onclick="document.getElementById('selected_ids_input').value = getSelectedIds()">
+                                {{ render_icon(bar_icon) }} {{ bar_name }}
+                            </button>
+                        </form>
+                    {% else %}
+                        <a class="action-icon text-decoration-none"
+                            href="{{ build_bar_url(bar_url[0], bar_url[1]) | trim }}"
+                            title="{{ bar_name }}">{{ render_icon(bar_icon) }} {{ bar_name }}</a>
+                    {% endif %}
+
+                {% endif %}
+            {% endfor %}
+        </div>
+        
+        {# 字段显示设置 #}
+        {% if custom_cols %}
+        <div class="dropdown">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="columnDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                {{ render_icon('gear-fill') }} 显示字段
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="columnDropdown">
+                {% for col in custom_cols %}
+                <li>
+                    <div class="form-check form-switch ms-2">
+                        <input class="form-check-input column-toggle" type="checkbox" id="col-{{ loop.index }}" 
+                               data-column="{{ loop.index0 }}" {% if not col.hide %}checked{% endif %}>
+                        <label class="form-check-label" for="col-{{ loop.index }}">{{ col.title }}</label>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {# 表格 #}
+    {% if responsive %}
+    <div class="{{ responsive_class }}">
+    {% endif %}
+    <table class="table{% if table_classes %}{{ ' ' + table_classes }}{% endif %}">
+    <thead{% if header_classes %} class="{{ header_classes }}"{% endif %}>
+    <tr>
+        {# 添加全选复选框 #}
+        <th scope="col"><input type="checkbox" onclick="toggleSelectAll(this)"></th>
+        
+        {# 表头 #}
+        {% for col in custom_cols %}
+            <th scope="col" {% if col.hide %}class="d-none"{% endif %}>{{ col.title }}</th>
+        {% endfor %}
+        
+        {# 操作列 #}
+        {% if custom_actions %}
+            <th scope="col">操作</th>
+        {% endif %}
+    </tr>
+    </thead>
+    <tbody{% if body_classes %} class="{{ body_classes }}"{% endif %}>
+    {% for row in data %}
+    <tr>
+        {# 行选择框 #}
+        <td><input type="checkbox" name="selected_ids" value="{{ row[primary_key] }}"></td>
+        
+        {# 数据列 #}
+        {% for col in custom_cols %}
+            <td {% if col.hide %}class="d-none"{% endif %}>
+                {% if col.field.startswith(':') and '.' in col.field %}
+                    {% set field_parts = col.field[1:].split('.') %}
+                    {{ row[field_parts[0]][field_parts[1]] }}
+                {% elif col.field.startswith(':') %}
+                    {{ row[col.field[1:]] }}
+                {% else %}
+                    {{ col.field }}
+                {% endif %}
+            </td>
+        {% endfor %}
+        
+        {# 操作按钮 #}
+        {% if custom_actions %}
+        <td>
+            {% for (action_name, action_icon, action_url) in custom_actions %}
+                <a class="action-icon text-decoration-none"
+                   {% if action_url is string %}
+                    href="{{ action_url }}"
+                   {% else %}
+                    href="{{ build_url(row, action_url[0], action_url[1], model, primary_key) | trim }}"
+                   {% endif %}
+                    title="{{ action_name }}">{{ render_icon(action_icon) }}</a>
+            {% endfor %}
+        </td>
+        {% endif %}
+    </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+    {% if responsive %}
+    </div>
+    {% endif %}
+
+    {# 字段显示切换脚本 #}
+    <script>
+        document.querySelectorAll('.column-toggle').forEach(function(checkbox) {
+            checkbox.addEventListener('change', function() {
+                const columnIndex = this.getAttribute('data-column');
+                const isChecked = this.checked;
+                
+                // 切换表头
+                document.querySelectorAll('thead th').forEach(function(th, index) {
+                    if(index == columnIndex + 1) { // +1 因为第一列是复选框
+                        if(isChecked) {
+                            th.classList.remove('d-none');
+                        } else {
+                            th.classList.add('d-none');
+                        }
+                    }
+                });
+                
+                // 切换数据列
+                document.querySelectorAll('tbody td').forEach(function(td, index) {
+                    const rowLength = {{ custom_cols|length + 1}}; // 列数 + 操作列
+                    const posInRow = (index % rowLength);
+                    
+                    if(posInRow == columnIndex + 1) { // +1 因为第一列是复选框
+                        if(isChecked) {
+                            td.classList.remove('d-none');
+                        } else {
+                            td.classList.add('d-none');
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+{% endmacro %}

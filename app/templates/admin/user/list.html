@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "macro/custom_table.html" import render_custom_table %}
 
 {% block content %}
 <div class="container">
@@ -7,7 +8,29 @@
     {% endif %}
     <a href="{{ url_for('admin.user_create') }}" class="btn btn-primary mb-3">新增</a>
     {{ render_form(form, form_type='inline',method='get',button_map={'search': 'primary', 'reset': 'secondary'},button_size='sm') }}
-    {{ render_table(messages, show_actions=True, model=User, edit_url=('admin.user_edit', [('id', ':id')]), delete_url=('admin.user_delete', [('id', ':id')])) }}
+    <!-- {{ render_table(messages, show_actions=True, model=User, edit_url=('admin.user_edit', [('id', ':id')]), delete_url=('admin.user_delete', [('id', ':id')])) }} -->
+    {{ render_custom_table(
+        data=messages,
+        model=User,
+        primary_key='id',
+        custom_actions=[
+            ('编辑', 'pencil-fill', ('admin.user_edit', [('id', ':id')])),
+            ('删除', 'trash-fill', ('admin.user_delete', [('id', ':id')]))
+        ],
+        custom_bars=[
+            ("批量删除", "slash-circle", ("admin.batch_user_delete", [('selected_ids', '')])),
+            ("导出Excel", "file-earmark-excel", ("admin.user_export", [])),
+        ],
+        custom_cols=[
+            { 'title': '用户ID', 'field': ':id' },
+            { 'title': '用户名', 'field': ':username' },
+            { 'title': '是否超级用户', 'field': ':is_superuser' },
+            { 'title': '创建时间', 'field': ':created_at', 'hide': True },
+            { 'title': '修改时间', 'field': ':updated_at', 'hide': True },
+        ],
+        responsive_class='table-responsive-lg',
+        header_classes='table-dark'
+    ) }}
     {{ render_pagination(pagination) }}
 </div>
 {% endblock %}

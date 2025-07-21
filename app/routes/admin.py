@@ -216,9 +216,7 @@ def permission_list():
             query = query.filter(Permission.endpoint.ilike(f"%{search_api}%"))
 
     page = request.args.get("page", 1, type=int)
-    per_page = request.args.get("per_page", 10, type=int)
-    if per_page > 100:
-        per_page = 100
+    per_page = min(request.args.get("per_page", 10, type=int), 100)  # 限制最大值
     pagination = query.paginate(page=page, per_page=per_page)
     messages = pagination.items
     return render_template(
@@ -292,3 +290,20 @@ def permission_delete(id):
     db.session.commit()
     flash("权限已删除", "success")
     return redirect(url_for("admin.permission_list"))
+
+@bp.route("/user/batch_delete", methods=["POST"])
+@permission_required('admin.user_delete')
+def batch_user_delete():
+    user_ids = request.form.getlist("user_ids[]")
+    users = User.query.filter(User.id.in_(user_ids)).all()
+    for user in users:
+        db.session.delete(user)
+    db.session.commit()
+    flash("用户已删除", "success")
+    return redirect(url_for("admin.user_list"))
+
+
+@bp.route("/user/export_excel", methods=["POST"])
+@permission_required('admin.user_export')
+def user_export():
+    return redirect(url_for("admin.user_list"))
