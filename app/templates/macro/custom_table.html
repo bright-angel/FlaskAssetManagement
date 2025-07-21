@@ -131,7 +131,7 @@
         
         {# 表头 #}
         {% for col in custom_cols %}
-            <th scope="col" {% if col.hide %}class="d-none"{% endif %}>{{ col.title }}</th>
+            <th scope="col" {% if col.hide %}class="d-none"{% endif %} data-column="{{ loop.index0 }}">{{ col.title }}</th>
         {% endfor %}
         
         {# 操作列 #}
@@ -148,7 +148,7 @@
         
         {# 数据列 #}
         {% for col in custom_cols %}
-            <td {% if col.hide %}class="d-none"{% endif %}>
+            <td {% if col.hide %}class="d-none"{% endif %} data-column="{{ loop.index0 }}">
                 {% if col.field.startswith(':') and '.' in col.field %}
                     {% set field_parts = col.field[1:].split('.') %}
                     {{ row[field_parts[0]][field_parts[1]] }}
@@ -182,7 +182,7 @@
     </div>
     {% endif %}
 
-    {# 字段显示切换脚本 #}
+    {# 修复字段显示切换脚本 #}
     <script>
         document.querySelectorAll('.column-toggle').forEach(function(checkbox) {
             checkbox.addEventListener('change', function() {
@@ -190,27 +190,20 @@
                 const isChecked = this.checked;
                 
                 // 切换表头
-                document.querySelectorAll('thead th').forEach(function(th, index) {
-                    if(index == columnIndex + 1) { // +1 因为第一列是复选框
-                        if(isChecked) {
-                            th.classList.remove('d-none');
-                        } else {
-                            th.classList.add('d-none');
-                        }
+                document.querySelectorAll(`thead th[data-column="${columnIndex}"]`).forEach(function(th) {
+                    if(isChecked) {
+                        th.classList.remove('d-none');
+                    } else {
+                        th.classList.add('d-none');
                     }
                 });
                 
-                // 切换数据列
-                document.querySelectorAll('tbody td').forEach(function(td, index) {
-                    const rowLength = {{ custom_cols|length + 1}}; // 列数 + 操作列
-                    const posInRow = (index % rowLength);
-                    
-                    if(posInRow == columnIndex + 1) { // +1 因为第一列是复选框
-                        if(isChecked) {
-                            td.classList.remove('d-none');
-                        } else {
-                            td.classList.add('d-none');
-                        }
+                // 切换表格体
+                document.querySelectorAll(`tbody td[data-column="${columnIndex}"]`).forEach(function(td) {
+                    if(isChecked) {
+                        td.classList.remove('d-none');
+                    } else {
+                        td.classList.add('d-none');
                     }
                 });
             });
