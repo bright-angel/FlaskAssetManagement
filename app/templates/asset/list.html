@@ -1,12 +1,42 @@
 {% extends "base.html" %}
+{% from "macro/custom_table.html" import render_custom_table %}
 
 {% block content %}
 <div class="container">
     {% if title %}
-        <h2>{{ title}}</h2>
+        <h2>{{ title }}</h2>
     {% endif %}
     <a href="{{ url_for('asset.create_asset') }}" class="btn btn-primary mb-3">新增</a>
-    {{ render_table(messages, show_actions=True, model=Asset, edit_url=('asset.edit_asset', [('id', ':id')]), delete_url=('asset.delete_asset', [('id', ':id')])) }}
+    {{ render_form(form, form_type='inline',method='get',button_map={'search': 'primary', 'reset': 'secondary'},button_size='sm') }}
+    {{ render_custom_table(
+        data=messages,
+        model=Asset,
+        primary_key='id',
+        custom_actions=[
+            ('编辑', 'pencil-fill', ('asset.edit_asset', [('id', ':id')])),
+            ('删除', 'trash-fill', ('asset.delete_asset', [('id', ':id')])),
+        ],
+        custom_bars=[
+            ("批量删除", "slash-circle", ("asset.batch_delete", [('selected_ids', '')])),
+        ],
+        custom_cols = [
+            { 'title': '资产ID', 'field': ':id' },
+            { 'title': '资产名称', 'field': ':name' },
+            { 'title': '资产类别', 'field': ':category' },
+            { 'title': 'IP地址', 'field': ':ip_address' },
+            { 'title': 'MAC地址', 'field': ':mac_address' },
+            { 'title': '操作系统版本', 'field': ':os_version' },
+            { 'title': 'CPU信息', 'field': ':cpu_info' },
+            { 'title': '内存容量', 'field': ':memory' },
+            { 'title': '存储容量', 'field': ':storage' },
+            { 'title': '资产价值', 'field': ':value' },
+            { 'title': '创建时间', 'field': ':created_at', 'hide': True },
+            { 'title': '更新时间', 'field': ':updated_at', 'hide': True },
+            { 'title': '创建人ID', 'field': ':created_by', 'hide': True }
+        ],
+        responsive_class='',
+        header_classes=''
+    ) }}
     {{ render_pagination(pagination) }}
 </div>
 {% endblock %}

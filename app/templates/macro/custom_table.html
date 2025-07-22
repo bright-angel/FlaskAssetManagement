@@ -22,7 +22,7 @@
     {%- endwith %}
 {%- endmacro %}
 
-{% macro build_bar_url(endpoint, url_tuples) %}
+{% macro build_bar_url(endpoint, url_tuples=()) %}
     {% with url_params = {} -%}
         {%- do url_params.update(request.view_args if not endpoint else {}),
             url_params.update(request.args if not endpoint else {}) -%}
@@ -39,12 +39,17 @@
                       custom_actions=None,
                       custom_bars=None,
                       custom_cols=None,
+                      responsive=False,
+                      responsive_class='table-responsive',
                       table_classes=None,
                       header_classes=None,
                       body_classes=None,
-                      responsive=False,
-                      responsive_class='table-responsive') %}
-    
+                      dropdown_button_classes='btn btn-sm btn-outline-secondary dropdown-toggle',
+                      action_button_classes='btn btn-sm btn-outline-secondary me-2',
+                      action_icon_classes='action-icon text-decoration-none',
+                      checkbox_classes='form-check-input',
+                      form_check_classes='form-check form-switch ms-2') %}
+
     {# 处理选中的ID列表 #}
     <script>
         function toggleSelectAll(source) {
@@ -76,23 +81,23 @@
                 {% set bar_url = bar[2] %}
                 
                 {% if bar_url is string %}
-                    <a href="{{ bar_url }}" class="btn btn-sm btn-outline-secondary me-2">
+                    <a href="{{ bar_url }}" class="{{ action_icon_classes }}">
                         {{ render_icon(bar_icon) }} {{ bar_name }}
                     </a>
                {% else %}
                     {% if bar_url[1] and bar_url[1][0][0] == "selected_ids" %}
-                        <form class="d-inline" action="{{ bar_url[0] }}" method="post">
+                        <form class="d-inline" action="{{ build_bar_url(bar_url[0]) | trim }}" method="post">
                             <input type="hidden" name="selected_ids" id="selected_ids_input" value="">
-                            <button type="submit" class="btn btn-sm btn-outline-secondary me-2" onclick="document.getElementById('selected_ids_input').value = getSelectedIds()">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="{{ action_button_classes }}" onclick="document.getElementById('selected_ids_input').value = getSelectedIds()">
                                 {{ render_icon(bar_icon) }} {{ bar_name }}
                             </button>
                         </form>
                     {% else %}
-                        <a class="action-icon text-decoration-none"
+                        <a class="{{ action_icon_classes }}"
                             href="{{ build_bar_url(bar_url[0], bar_url[1]) | trim }}"
                             title="{{ bar_name }}">{{ render_icon(bar_icon) }} {{ bar_name }}</a>
                     {% endif %}
-
                 {% endif %}
             {% endfor %}
         </div>
@@ -100,14 +105,14 @@
         {# 字段显示设置 #}
         {% if custom_cols %}
         <div class="dropdown">
-            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="columnDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            <button class="{{ dropdown_button_classes }}" type="button" id="columnDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                 {{ render_icon('gear-fill') }} 显示字段
             </button>
             <ul class="dropdown-menu" aria-labelledby="columnDropdown">
                 {% for col in custom_cols %}
                 <li>
-                    <div class="form-check form-switch ms-2">
-                        <input class="form-check-input column-toggle" type="checkbox" id="col-{{ loop.index }}" 
+                    <div class="{{ form_check_classes }}">
+                        <input class="{{ checkbox_classes }} column-toggle" type="checkbox" id="col-{{ loop.index }}" 
                                data-column="{{ loop.index0 }}" {% if not col.hide %}checked{% endif %}>
                         <label class="form-check-label" for="col-{{ loop.index }}">{{ col.title }}</label>
                     </div>
@@ -164,7 +169,7 @@
         {% if custom_actions %}
         <td>
             {% for (action_name, action_icon, action_url) in custom_actions %}
-                <a class="action-icon text-decoration-none"
+                <a class="{{ action_icon_classes }}"
                    {% if action_url is string %}
                     href="{{ action_url }}"
                    {% else %}
@@ -182,7 +187,7 @@
     </div>
     {% endif %}
 
-    {# 修复字段显示切换脚本 #}
+    {# 字段显示切换脚本 #}
     <script>
         document.querySelectorAll('.column-toggle').forEach(function(checkbox) {
             checkbox.addEventListener('change', function() {

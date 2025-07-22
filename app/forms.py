@@ -52,6 +52,27 @@ class PermissionSearchForm(FlaskForm):
     search = SubmitField('搜索')
     reset = SubmitField('重置')
 
+class AssetSearchForm(FlaskForm):
+    name = StringField("资产名称", render_kw={"placeholder": "资产名称"}, validators=[Optional()])
+    category = SelectField("资产类别", 
+                           choices=[
+                               ('', '所有类别'),  # 默认选项
+                               ('服务器', '服务器'), 
+                               ('网络设备', '网络设备'), 
+                               ('PC', 'PC'), 
+                               ('打印机', '打印机'), 
+                               ('存储设备', '存储设备')
+                           ], 
+                           validators=[Optional()])
+    ip_address = StringField("IP地址", render_kw={"placeholder": "IP地址"}, validators=[Optional()])
+    mac_address = StringField("MAC地址", render_kw={"placeholder": "MAC地址"}, validators=[Optional()])
+    per_page = SelectField("每页数量", 
+                           choices=[(10, '10'), (20, '20'), (50, '50'), (100, '100')], 
+                           coerce=int, 
+                           default=10)
+    search = SubmitField('搜索')
+    reset = SubmitField('重置')
+
 class UserForm(FlaskForm):
     username = StringField("用户名", validators=[DataRequired(), Length(3, 20)])
     password = PasswordField("密码", validators=[])
